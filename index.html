@@ -21,6 +21,8 @@
       --red-dim: rgba(255,107,122,0.12);
       --green: #4ade80;
       --green-dim: rgba(74,222,128,0.12);
+      --yellow: #fbbf24;
+      --yellow-dim: rgba(251,191,36,0.1);
       --radius: 10px;
       --radius-lg: 16px;
     }
@@ -36,7 +38,6 @@
       flex-direction: column;
     }
 
-    /* ── Header ── */
     header {
       border-bottom: 1px solid var(--border);
       padding: 0 2rem;
@@ -52,7 +53,6 @@
     }
 
     .logo-row { display: flex; align-items: center; gap: .75rem; }
-
     .logo-box {
       width: 34px; height: 34px;
       background: var(--accent-dim);
@@ -61,17 +61,11 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 17px; font-weight: 700; color: var(--accent);
     }
-
     .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
     .logo-text strong { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -.2px; }
     .logo-text span   { font-size: 11px; color: var(--text-muted); }
+    .badge { font-size: 11px; color: var(--text-muted); border: 1px solid var(--border2); border-radius: 20px; padding: 3px 9px; }
 
-    .badge {
-      font-size: 11px; color: var(--text-muted);
-      border: 1px solid var(--border2); border-radius: 20px; padding: 3px 9px;
-    }
-
-    /* ── Main ── */
     main {
       flex: 1;
       max-width: 760px;
@@ -80,19 +74,37 @@
       padding: 3rem 2rem 4rem;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
     .hero { text-align: center; }
-    .hero h1 {
-      font-size: 2.2rem; font-weight: 700;
-      letter-spacing: -.5px; line-height: 1.2;
-      margin-bottom: .4rem;
-    }
+    .hero h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -.5px; line-height: 1.2; margin-bottom: .4rem; }
     .hero h1 em { font-style: normal; color: var(--accent); }
     .hero p { font-size: 14px; color: var(--text-sec); }
 
-    /* ── The one box ── */
+    /* Loading overlay for kuromoji init */
+    .init-banner {
+      background: var(--yellow-dim);
+      border: 1px solid rgba(251,191,36,.2);
+      border-radius: var(--radius);
+      padding: .6rem 1rem;
+      font-size: 13px;
+      color: var(--yellow);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .init-banner.hidden { display: none; }
+    .init-banner.ok { background: var(--green-dim); border-color: rgba(74,222,128,.2); color: var(--green); }
+
+    .spinner-sm {
+      width: 13px; height: 13px;
+      border: 2px solid rgba(251,191,36,.3); border-top-color: var(--yellow);
+      border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+    .spinner-sm.green { border-color: rgba(74,222,128,.3); border-top-color: var(--green); }
+
+    /* Editor box */
     .editor-wrap {
       background: var(--surface);
       border: 1px solid var(--border2);
@@ -101,7 +113,6 @@
       flex-direction: column;
     }
 
-    /* Textarea — shown while editing */
     #inputArea {
       display: block;
       width: 100%;
@@ -117,8 +128,8 @@
       padding: 1.25rem 1.5rem;
     }
     #inputArea::placeholder { color: var(--text-muted); }
+    #inputArea:disabled { opacity: .5; cursor: not-allowed; }
 
-    /* Result div — shown after generation */
     #resultArea {
       display: none;
       min-height: 260px;
@@ -127,7 +138,6 @@
       font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
       line-height: 3.6;
       color: var(--text);
-      cursor: text;
     }
 
     #resultArea ruby {
@@ -136,7 +146,6 @@
       align-items: center;
       vertical-align: bottom;
     }
-
     #resultArea rt {
       font-size: 10px;
       line-height: 1.4;
@@ -144,7 +153,6 @@
       text-align: center;
     }
 
-    /* ── Bottom bar inside the box ── */
     .box-footer {
       border-top: 1px solid var(--border);
       padding: .75rem 1.25rem;
@@ -154,14 +162,8 @@
       flex-wrap: wrap;
     }
 
-    /* ── Examples ── */
-    .examples {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .4rem;
-      align-items: center;
-    }
-    .ex-label { font-size: 12px; color: var(--text-muted); }
+    .examples { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+    .ex-label  { font-size: 12px; color: var(--text-muted); }
     .chip {
       font-size: 12px; color: var(--text-sec);
       background: var(--surface2); border: 1px solid var(--border2);
@@ -171,7 +173,8 @@
     }
     .chip:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ── Buttons ── */
+    .char-count { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
     .btn-primary {
       display: flex; align-items: center; gap: .35rem;
       background: var(--accent); color: #fff;
@@ -207,31 +210,20 @@
     .tool-btn.dl { background: var(--accent-dim); border-color: var(--accent-glow); color: var(--accent); }
     .tool-btn.dl:hover { background: rgba(108,143,255,.22); }
 
-    .char-count { font-size: 12px; color: var(--text-muted); margin-left: auto; }
-
-    /* ── Loading / Error ── */
-    .loading {
-      display: none; align-items: center; gap: .55rem;
-      color: var(--text-sec); font-size: 13px;
-    }
+    .loading { display: none; align-items: center; gap: .55rem; color: var(--text-sec); font-size: 13px; }
     .loading.on { display: flex; }
-
-    .spinner {
-      width: 13px; height: 13px;
-      border: 2px solid var(--border2); border-top-color: var(--accent);
-      border-radius: 50%; animation: spin .7s linear infinite;
-    }
+    .spinner { width: 13px; height: 13px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .error-box {
       display: none;
       background: var(--red-dim); border: 1px solid rgba(255,107,122,.25);
-      border-radius: var(--radius); padding: .5rem .85rem;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      padding: .55rem 1.25rem;
       font-size: 12px; color: var(--red);
     }
     .error-box.on { display: block; }
 
-    /* ── Opt toggles ── */
     .opt-row { display: flex; gap: .4rem; }
     .opt-btn {
       font-size: 11px; color: var(--text-muted);
@@ -242,7 +234,6 @@
     .opt-btn:hover { border-color: var(--accent); color: var(--accent); }
     .opt-btn.active { background: var(--accent-dim); border-color: var(--accent-glow); color: var(--accent); }
 
-    /* ── Footer ── */
     footer {
       border-top: 1px solid var(--border);
       padding: 1rem 2rem;
@@ -274,19 +265,20 @@
 <main>
   <div class="hero">
     <h1>Paste Japanese. <em>Get furigana.</em></h1>
-    <p>Paste or type text — furigana appears right inside the same box.</p>
+    <p>Paste or type text — furigana appears right inside the same box. No API key needed.</p>
   </div>
 
-  <!-- The single editor box -->
+  <!-- Init banner -->
+  <div class="init-banner" id="initBanner">
+    <div class="spinner-sm" id="initSpinner"></div>
+    <span id="initMsg">Loading Japanese dictionary… (first load may take a few seconds)</span>
+  </div>
+
+  <!-- Editor box -->
   <div class="editor-wrap">
-
-    <!-- Input textarea (editing mode) -->
-    <textarea id="inputArea" placeholder="日本語のテキストをここに貼り付けてください…" oninput="updateCount()"></textarea>
-
-    <!-- Result display (result mode) -->
+    <textarea id="inputArea" placeholder="日本語のテキストをここに貼り付けてください…" oninput="updateCount()" disabled></textarea>
     <div id="resultArea"></div>
 
-    <!-- Bottom bar: input mode -->
     <div class="box-footer" id="footerInput">
       <div class="examples">
         <span class="ex-label">Try:</span>
@@ -296,13 +288,12 @@
         <span class="chip" onclick="setExample('彼女は美しい花を大切にしながら、毎朝水をやっていた。')">彼女は美しい花を…</span>
       </div>
       <span class="char-count" id="charCount">0 characters</span>
-      <button class="btn-primary" id="genBtn" onclick="generate()">✦ Add furigana</button>
+      <button class="btn-primary" id="genBtn" onclick="generate()" disabled>✦ Add furigana</button>
     </div>
 
-    <!-- Bottom bar: result mode -->
     <div class="box-footer" id="footerResult" style="display:none">
       <div class="loading" id="loading"><div class="spinner"></div> Generating…</div>
-      <button class="btn-ghost" id="editBtn" onclick="backToEdit()">← Edit</button>
+      <button class="btn-ghost" onclick="backToEdit()">← Edit</button>
       <button class="tool-btn" id="copyTextBtn" onclick="copyText()">⎘ Copy text</button>
       <button class="tool-btn" id="copyHtmlBtn" onclick="copyHTML()">⎘ Copy HTML</button>
       <button class="tool-btn dl" onclick="downloadHTML()">↓ Download</button>
@@ -312,24 +303,51 @@
       </div>
     </div>
 
-    <!-- Error bar -->
     <div class="error-box" id="errorBox"></div>
   </div>
-
 </main>
 
 <footer>
   <span>🦝</span>
   <span>Developed by Akihiro Labs</span>
   <span class="dot">·</span>
-  <span>Powered by Claude AI</span>
+  <span>Powered by Kuromoji</span>
 </footer>
 
+<!-- Kuromoji via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
 <script>
+let tokenizer = null;
 let currentTokens = [];
 let furiganaVisible = true;
 let romajiMode = false;
 
+// ── Init Kuromoji ──
+kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }).build(function(err, built) {
+  const banner  = document.getElementById('initBanner');
+  const spinner = document.getElementById('initSpinner');
+  const msg     = document.getElementById('initMsg');
+
+  if (err) {
+    banner.style.background = 'var(--red-dim)';
+    banner.style.borderColor = 'rgba(255,107,122,.2)';
+    banner.style.color = 'var(--red)';
+    spinner.style.display = 'none';
+    msg.textContent = 'Failed to load dictionary. Please refresh the page.';
+    return;
+  }
+
+  tokenizer = built;
+  spinner.className = 'spinner-sm green';
+  banner.className = 'init-banner ok';
+  msg.textContent = '✓ Dictionary ready — paste your text!';
+  document.getElementById('inputArea').disabled = false;
+  document.getElementById('genBtn').disabled = false;
+
+  setTimeout(() => { banner.className = 'init-banner hidden'; }, 2500);
+});
+
+// ── Romaji table ──
 const ROMAJI_MAP = {
   'あ':'a','い':'i','う':'u','え':'e','お':'o',
   'か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko',
@@ -370,6 +388,15 @@ function toRomaji(kana) {
   return r;
 }
 
+function hasKanji(str) {
+  return /[\u4e00-\u9faf\u3400-\u4dbf]/.test(str);
+}
+
+function katakanaToHiragana(str) {
+  return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+}
+
+// ── UI helpers ──
 function updateCount() {
   const t = document.getElementById('inputArea').value;
   document.getElementById('charCount').textContent = t.length + ' character' + (t.length !== 1 ? 's' : '');
@@ -395,22 +422,18 @@ function showResultMode() {
   document.getElementById('footerResult').style.display = 'flex';
 }
 
-function backToEdit() {
-  showInputMode();
-}
+function backToEdit() { showInputMode(); }
 
 function renderOutput() {
   let html = '';
   for (const tok of currentTokens) {
     if (tok.type === 'text') {
       html += tok.value.replace(/\n/g, '<br>');
-    } else if (tok.type === 'ruby') {
+    } else {
       const reading = romajiMode ? toRomaji(tok.reading) : tok.reading;
-      if (furiganaVisible) {
-        html += `<ruby>${tok.base}<rt>${reading}</rt></ruby>`;
-      } else {
-        html += tok.base;
-      }
+      html += furiganaVisible
+        ? `<ruby>${tok.base}<rt>${reading}</rt></ruby>`
+        : tok.base;
     }
   }
   document.getElementById('resultArea').innerHTML = html;
@@ -428,9 +451,10 @@ function toggleRomaji() {
   renderOutput();
 }
 
-async function generate() {
-  const text = document.getElementById('inputArea').value.trim();
-  if (!text) return;
+// ── Core: generate furigana using Kuromoji ──
+function generate() {
+  const text = document.getElementById('inputArea').value;
+  if (!text.trim() || !tokenizer) return;
 
   document.getElementById('genBtn').disabled = true;
   document.getElementById('errorBox').classList.remove('on');
@@ -438,40 +462,33 @@ async function generate() {
   document.getElementById('loading').classList.add('on');
 
   try {
-    const sys = `You are a Japanese linguistics expert. When given Japanese text, return ONLY a valid JSON array.
-Each element must be one of:
-- {"type":"text","value":"..."} for non-kanji segments (hiragana, katakana, punctuation, spaces, numbers, latin)
-- {"type":"ruby","base":"漢字","reading":"よみかた"} for kanji or kanji+kana words
+    const tokens = tokenizer.tokenize(text);
+    currentTokens = [];
 
-Rules:
-- Group kanji with their okurigana (e.g. 食べる → base:"食べる", reading:"たべる")
-- Include the full compound word as base when kanji appear together (e.g. 図書館 → base:"図書館", reading:"としょかん")
-- DO NOT add furigana to pure hiragana, katakana, punctuation, spaces, or numbers
-- Return ONLY the raw JSON array, nothing else — no explanation, no markdown, no backticks`;
+    for (const t of tokens) {
+      const surface = t.surface_form;
+      const reading = t.reading; // katakana
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4096,
-        system: sys,
-        messages: [{ role: 'user', content: text }]
-      })
-    });
+      if (!hasKanji(surface) || !reading) {
+        // No kanji or no reading — plain text
+        // Merge with previous text token if possible
+        if (currentTokens.length && currentTokens[currentTokens.length-1].type === 'text') {
+          currentTokens[currentTokens.length-1].value += surface;
+        } else {
+          currentTokens.push({ type: 'text', value: surface });
+        }
+      } else {
+        // Has kanji — make ruby
+        const hiraganaReading = katakanaToHiragana(reading);
+        currentTokens.push({ type: 'ruby', base: surface, reading: hiraganaReading });
+      }
+    }
 
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
-
-    const raw = data.content.map(i => i.text || '').join('');
-    const clean = raw.replace(/```json|```/g, '').trim();
-    currentTokens = JSON.parse(clean);
     renderOutput();
-
-  } catch (err) {
+  } catch(err) {
     showInputMode();
     const box = document.getElementById('errorBox');
-    box.textContent = err.message || 'Something went wrong. Please try again.';
+    box.textContent = err.message || 'Something went wrong.';
     box.classList.add('on');
   } finally {
     document.getElementById('loading').classList.remove('on');
@@ -479,6 +496,7 @@ Rules:
   }
 }
 
+// ── Copy / Download ──
 async function copyText() {
   let text = '';
   for (const tok of currentTokens) {
