@@ -1,667 +1,534 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>漢字ブリッジ — Furigana Tool by Akihiro Labs</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet" />
-    <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      :root {
-        --ink: #0f0e17; --ink-mid: #3a3848; --ink-soft: #7b7896; --ink-ghost: #b8b5cc;
-        --surface: #ffffff; --surface-2: #f7f6fb; --surface-3: #f0eefb;
-        --accent: #4a3fc0; --accent-2: #7c6fe0; --accent-soft: #e8e5fb;
-        --border: rgba(74,63,192,0.12); --border-mid: rgba(74,63,192,0.22);
-        --radius: 10px; --radius-lg: 16px; --radius-xl: 22px;
-        --shadow: 0 2px 16px rgba(74,63,192,0.08);
-        --green: #0a7c4f; --green-bg: #e6f9f0; --green-border: #a3e0c4;
-      }
-      body.dark {
-        --ink: #e8e6f5; --ink-mid: #c4c0db; --ink-soft: #8c87a8; --ink-ghost: #5a5672;
-        --surface: #0e0c1a; --surface-2: #0b0917; --surface-3: #131025;
-        --accent: #7c6fe0; --accent-2: #9d92e8; --accent-soft: #1e1a3a;
-        --border: rgba(124,111,224,0.15); --border-mid: rgba(124,111,224,0.25);
-        --shadow: 0 2px 16px rgba(0,0,0,0.5);
-        --green: #34d399; --green-bg: #071f15; --green-border: #134d30;
-      }
-      html { scroll-behavior: smooth; }
-      body { font-family: "Inter","Noto Sans JP",sans-serif; background: var(--surface-2); color: var(--ink); line-height: 1.6; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanji Bridge — 漢字ブリッジ</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --accent: #6c8fff;
+      --accent-dim: rgba(108,143,255,0.12);
+      --accent-glow: rgba(108,143,255,0.25);
+      --text: #e8e8f0;
+      --text-sec: #9090a8;
+      --text-muted: #5a5a72;
+      --red: #ff6b7a;
+      --red-dim: rgba(255,107,122,0.12);
+      --green: #4ade80;
+      --green-dim: rgba(74,222,128,0.12);
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
 
-      nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 58px; transition: background 0.3s; }
-      body.dark nav { background: rgba(14,12,26,0.95); }
-      .nav-brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; }
-      .nav-brand .logo-jp { font-family: "Noto Serif JP",serif; font-size: 20px; font-weight: 700; color: var(--accent); }
-      .nav-brand .logo-en { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.06em; text-transform: uppercase; }
-      .nav-right { display: flex; align-items: center; gap: 10px; }
-      .free-badge { background: var(--green-bg); color: var(--green); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--green-border); }
-      .dark-toggle { background: none; border: 1.5px solid var(--border-mid); border-radius: 20px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: var(--ink-soft); transition: all 0.15s; }
-      .dark-toggle:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-      .hero { padding: 5rem 2rem 4rem; text-align: center; background: linear-gradient(160deg,var(--surface) 0%,var(--surface-3) 100%); border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
-      .hero::before { content: "語"; position: absolute; right: -20px; top: -30px; font-family: "Noto Serif JP",serif; font-size: 260px; font-weight: 700; color: rgba(74,63,192,0.04); pointer-events: none; line-height: 1; user-select: none; }
-      .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-bg); color: var(--green); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 1.5rem; border: 1px solid var(--green-border); }
-      .hero h1 { font-family: "Noto Serif JP",serif; font-size: clamp(2rem,5vw,3.5rem); font-weight: 700; line-height: 1.15; color: var(--ink); margin-bottom: 1rem; }
-      .hero h1 span { color: var(--accent); }
-      .hero p { font-size: 17px; color: var(--ink-mid); max-width: 480px; margin: 0 auto 2.5rem; font-weight: 300; line-height: 1.7; }
-      .btn-primary { background: var(--accent); color: #fff; padding: 12px 26px; border-radius: 30px; font-size: 15px; font-weight: 500; text-decoration: none; border: none; cursor: pointer; transition: background 0.18s,transform 0.12s; display: inline-flex; align-items: center; gap: 8px; }
-      .btn-primary:hover { background: #3730a8; transform: translateY(-1px); }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-      .features { display: flex; justify-content: center; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; transition: background 0.3s; }
-      .feature { padding: 1.25rem 2rem; text-align: center; border-right: 1px solid var(--border); flex-shrink: 0; }
-      .feature:last-child { border-right: none; }
-      .feature .f-icon { font-size: 22px; margin-bottom: 4px; }
-      .feature .f-title { font-size: 13px; font-weight: 600; }
-      .feature .f-sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: rgba(15,15,19,0.94);
+      backdrop-filter: blur(14px);
+      z-index: 20;
+    }
 
-      .section { max-width: 760px; margin: 0 auto; padding: 3.5rem 2rem; }
-      .tool-card { background: var(--surface); border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; transition: background 0.3s; }
-      .tool-card-header { background: var(--accent-soft); padding: 1rem 1.5rem; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
-      .t-icon { width: 34px; height: 34px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff; flex-shrink: 0; }
-      .t-title { font-size: 15px; font-weight: 600; }
-      .t-sub { font-size: 12px; color: var(--ink-soft); }
-      .tool-card-body { padding: 1.5rem; }
+    .logo-row { display: flex; align-items: center; gap: .75rem; }
 
-      .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
-      .chip { font-size: 12px; padding: 5px 12px; border: 1px solid var(--border-mid); border-radius: 20px; cursor: pointer; color: var(--ink-mid); background: none; font-family: "Noto Sans JP",sans-serif; transition: all 0.14s; }
-      .chip:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+    .logo-box {
+      width: 34px; height: 34px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-glow);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 700; color: var(--accent);
+    }
 
-      .textarea-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-      .textarea-toolbar-label { font-size: 12px; color: var(--ink-soft); margin-right: 2px; }
-      .clear-textarea-btn { font-size: 12px; padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border-mid); background: none; cursor: pointer; color: var(--ink-soft); transition: all 0.14s; font-family: inherit; }
-      .clear-textarea-btn:hover { background: #fff0f0; color: #c0392b; border-color: #e74c3c; }
-      body.dark .clear-textarea-btn:hover { background: rgba(192,57,43,0.15); }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .logo-text strong { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -.2px; }
+    .logo-text span   { font-size: 11px; color: var(--text-muted); }
 
-      .input-group { display: flex; gap: 10px; margin-bottom: 1rem; align-items: flex-start; }
-      textarea { font-family: "Noto Sans JP","Inter",sans-serif; font-size: 15px; color: var(--ink); background: var(--surface-2); border: 1.5px solid var(--border-mid); border-radius: var(--radius); padding: 12px 14px; width: 100%; outline: none; transition: border-color 0.15s, background 0.3s, color 0.3s; min-height: 110px; resize: vertical; }
-      textarea:focus { border-color: var(--accent); background: var(--surface); }
-      textarea::placeholder { color: var(--ink-ghost); }
-      .run-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius); padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s,transform 0.1s; display: flex; align-items: center; gap: 7px; align-self: flex-end; }
-      .run-btn:hover:not(:disabled) { background: #3730a8; transform: translateY(-1px); }
-      .run-btn:disabled { background: var(--ink-ghost); cursor: not-allowed; }
+    .badge {
+      font-size: 11px; color: var(--text-muted);
+      border: 1px solid var(--border2); border-radius: 20px; padding: 3px 9px;
+    }
 
-      .status-line { font-size: 12px; color: var(--ink-soft); margin-bottom: 10px; min-height: 16px; }
-      .status-line.loading { color: var(--accent); }
-      .status-line.error { color: #c0392b; }
-      .status-line.ok { color: var(--green); }
-      .loader-wrap { margin-bottom: 10px; display: none; }
-      .loader-wrap.show { display: block; }
-      .loader-bar { height: 3px; background: var(--accent-soft); border-radius: 3px; overflow: hidden; }
-      .loader-bar::after { content: ""; display: block; height: 100%; width: 40%; background: var(--accent); border-radius: 3px; animation: slide 1.2s ease-in-out infinite; }
-      @keyframes slide { 0%{transform:translateX(-100%)} 100%{transform:translateX(350%)} }
+    /* ── Main ── */
+    main {
+      flex: 1;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
 
-      .result-toolbar { display: none; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-      .result-toolbar.show { display: flex; }
-      .tool-btn { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border-mid); background: none; cursor: pointer; color: var(--ink-soft); transition: all 0.14s; display: flex; align-items: center; gap: 5px; font-family: inherit; }
-      .tool-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-      .tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-      .tool-btn.success { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+    .hero { text-align: center; }
+    .hero h1 {
+      font-size: 2.2rem; font-weight: 700;
+      letter-spacing: -.5px; line-height: 1.2;
+      margin-bottom: .4rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p { font-size: 14px; color: var(--text-sec); }
 
-      .furigana-result { background: var(--surface-3); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem 1.75rem; font-family: "Noto Sans JP",serif; font-size: 20px; line-height: 3.6; min-height: 90px; color: var(--ink); transition: background 0.3s; }
-      .furigana-result ruby { ruby-align: center; }
-      .furigana-result rt { font-size: 10px; color: var(--accent); font-weight: 500; transition: opacity 0.2s; }
-      .furigana-result.hide-rt rt { opacity: 0; }
-      .furigana-placeholder { color: var(--ink-ghost); font-size: 14px; font-style: italic; line-height: 1.6; }
+    /* ── The one box ── */
+    .editor-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+    }
 
-      .furigana-result .jlpt-n5 { border-bottom: 2px solid #22c55e; }
-      .furigana-result .jlpt-n4 { border-bottom: 2px solid #14b8a6; }
-      .furigana-result .jlpt-n3 { border-bottom: 2px solid #3b82f6; }
-      .furigana-result .jlpt-n2 { border-bottom: 2px solid #f97316; }
-      .furigana-result .jlpt-n1 { border-bottom: 2px solid #ef4444; }
-      .furigana-result.no-jlpt .jlpt-n5,.furigana-result.no-jlpt .jlpt-n4,.furigana-result.no-jlpt .jlpt-n3,.furigana-result.no-jlpt .jlpt-n2,.furigana-result.no-jlpt .jlpt-n1 { border-bottom: none; }
+    /* Textarea — shown while editing */
+    #inputArea {
+      display: block;
+      width: 100%;
+      min-height: 260px;
+      resize: none;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 18px;
+      font-family: 'Hiragino Sans', 'Yu Gothic', 'Segoe UI', sans-serif;
+      line-height: 1.9;
+      padding: 1.25rem 1.5rem;
+    }
+    #inputArea::placeholder { color: var(--text-muted); }
 
-      .jlpt-legend { display: none; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius); border: 1px solid var(--border); }
-      .jlpt-legend.show { display: flex; }
-      .jlpt-legend-label { font-size: 11px; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-      .jlpt-dot { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-mid); }
-      .jlpt-dot span { display: inline-block; width: 22px; height: 3px; border-radius: 2px; }
-      .jd-n5{background:#22c55e}.jd-n4{background:#14b8a6}.jd-n3{background:#3b82f6}.jd-n2{background:#f97316}.jd-n1{background:#ef4444}
+    /* Result div — shown after generation */
+    #resultArea {
+      display: none;
+      min-height: 260px;
+      padding: 1.25rem 1.5rem;
+      font-size: 18px;
+      font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+      line-height: 3.6;
+      color: var(--text);
+      cursor: text;
+    }
 
-      .breakdown-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-top: 10px; }
-      .breakdown-panel.show { display: block; }
-      .breakdown-title { font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
-      .breakdown-empty { font-size: 13px; color: var(--ink-ghost); font-style: italic; }
-      .word-token { cursor: pointer; border-radius: 4px; padding: 0 2px; transition: background 0.12s; }
-      .word-token:hover { background: var(--accent-soft); }
-      .word-token.selected { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: 1px; }
-      .breakdown-detail { background: var(--surface-2); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; }
-      .breakdown-detail .bd-word { font-family: "Noto Serif JP",serif; font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
-      .breakdown-detail .bd-row { display: flex; gap: 8px; margin-top: 4px; color: var(--ink-mid); }
-      .breakdown-detail .bd-label { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; min-width: 80px; }
+    #resultArea ruby {
+      display: inline-flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      vertical-align: bottom;
+    }
 
-      #ready-banner { display: none; background: var(--green-bg); border: 1px solid var(--green-border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: var(--green); font-weight: 500; align-items: center; gap: 10px; }
-      #ready-banner.show { display: flex; }
-      .byte-wrap { display: flex; align-items: flex-start; gap: 10px; }
-      .byte-avatar { font-size: 28px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
-      .byte-bubble { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 12px 12px 12px 2px; padding: 7px 12px; font-size: 12px; color: var(--green); font-weight: 500; line-height: 1.4; }
+    #resultArea rt {
+      font-size: 10px;
+      line-height: 1.4;
+      color: var(--accent);
+      text-align: center;
+    }
 
-      .history-section { margin-top: 2.5rem; }
-      .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-      .history-title { font-size: 14px; font-weight: 600; color: var(--ink-mid); display: flex; align-items: center; gap: 7px; }
-      .history-title .h-badge { background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
-      .clear-btn { font-size: 12px; color: var(--ink-soft); background: none; border: 1px solid var(--border-mid); border-radius: 20px; padding: 4px 12px; cursor: pointer; transition: all 0.14s; }
-      .clear-btn:hover { color: #c0392b; border-color: #c0392b; }
-      .history-list { display: flex; flex-direction: column; gap: 10px; }
-      .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow 0.15s, background 0.3s; }
-      .history-item:hover { box-shadow: var(--shadow); }
-      .history-item-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
-      .history-item-meta { display: flex; align-items: center; gap: 10px; }
-      .history-num { font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 10px; }
-      .history-preview { font-size: 13px; color: var(--ink-mid); font-family: "Noto Sans JP",sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 380px; }
-      .history-time { font-size: 11px; color: var(--ink-ghost); }
-      .history-actions { display: flex; align-items: center; gap: 6px; }
-      .h-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-mid); background: none; cursor: pointer; color: var(--ink-soft); transition: all 0.14s; white-space: nowrap; }
-      .h-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-      .h-btn.dl { border-color: var(--accent-2); color: var(--accent); }
-      .h-btn.dl:hover { background: var(--accent); color: #fff; }
-      .history-body { padding: 14px 1.25rem; font-family: "Noto Sans JP",serif; font-size: 17px; line-height: 3.2; color: var(--ink); display: none; }
-      .history-body.open { display: block; }
-      .history-body ruby { ruby-align: center; }
-      .history-body rt { font-size: 9px; color: var(--accent); font-weight: 500; }
-      .history-empty { text-align: center; padding: 2rem; color: var(--ink-ghost); font-size: 13px; border: 1.5px dashed var(--border-mid); border-radius: var(--radius-lg); }
+    /* ── Bottom bar inside the box ── */
+    .box-footer {
+      border-top: 1px solid var(--border);
+      padding: .75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
 
-      #dict-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(15,14,23,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; transition: opacity 0.4s; }
-      #dict-overlay.hidden { opacity: 0; pointer-events: none; }
-      .overlay-card { background: var(--surface); border-radius: 20px; padding: 2.5rem 2rem; text-align: center; max-width: 340px; width: 90%; box-shadow: 0 20px 60px rgba(74,63,192,0.25); }
-      .overlay-kanji { font-family: "Noto Serif JP",serif; font-size: 52px; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; animation: pulse 1.5s ease-in-out infinite; }
-      @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-      .overlay-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-      .overlay-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 1.5rem; line-height: 1.5; }
-      .overlay-bar-wrap { background: var(--accent-soft); border-radius: 99px; height: 6px; overflow: hidden; }
-      .overlay-bar { height: 100%; width: 0%; background: var(--accent); border-radius: 99px; transition: width 0.4s ease; }
-      .overlay-steps { margin-top: 12px; font-size: 11px; color: var(--ink-ghost); }
+    /* ── Examples ── */
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      align-items: center;
+    }
+    .ex-label { font-size: 12px; color: var(--text-muted); }
+    .chip {
+      font-size: 12px; color: var(--text-sec);
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 3px 10px; cursor: pointer;
+      font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      transition: border-color .15s, color .15s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
 
-      footer { background: #080612; color: rgba(255,255,255,0.55); text-align: center; padding: 2.5rem 2rem; font-size: 13px; margin-top: 4rem; }
-      footer .foot-brand { font-family: "Noto Serif JP",serif; font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-      footer .foot-labs { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
-      footer .foot-byte { font-size: 28px; margin-bottom: 8px; }
-      footer p { margin-top: 8px; max-width: 560px; margin-left: auto; margin-right: auto; }
-      footer .foot-dev { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; }
+    /* ── Buttons ── */
+    .btn-primary {
+      display: flex; align-items: center; gap: .35rem;
+      background: var(--accent); color: #fff;
+      font-size: 13px; font-weight: 600;
+      border: none; border-radius: var(--radius);
+      padding: .48rem 1.1rem; cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:active { transform: scale(.97); }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
 
-      .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; z-index: 9998; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); pointer-events: none; }
-      .toast.show { transform: translateX(-50%) translateY(0); }
+    .btn-ghost {
+      background: transparent; color: var(--text-sec);
+      font-size: 13px; border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: .45rem .85rem;
+      cursor: pointer; transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
 
-      @media (max-width:600px) {
-        .hero{padding:3rem 1.25rem 2.5rem} .section{padding:2.5rem 1.25rem}
-        .input-group{flex-direction:column} .run-btn{width:100%;justify-content:center}
-        nav{padding:0 1rem} .history-preview{max-width:180px} .nav-brand .logo-en{display:none}
-      }
-    </style>
-  </head>
-  <body>
-    <div id="dict-overlay">
-      <div class="overlay-card">
-        <div class="overlay-kanji">振</div>
-        <div class="overlay-title">Loading Japanese dictionary…</div>
-        <div class="overlay-sub">This only happens once.<br>The dictionary is downloading (~7MB).</div>
-        <div class="overlay-bar-wrap"><div class="overlay-bar" id="overlay-bar"></div></div>
-        <div class="overlay-steps" id="overlay-steps">Starting…</div>
-      </div>
+    .tool-btn {
+      display: flex; align-items: center; gap: .3rem;
+      font-size: 12px; color: var(--text-sec);
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: .38rem .75rem;
+      cursor: pointer; transition: all .15s;
+      white-space: nowrap;
+    }
+    .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tool-btn.success { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+    .tool-btn.dl { background: var(--accent-dim); border-color: var(--accent-glow); color: var(--accent); }
+    .tool-btn.dl:hover { background: rgba(108,143,255,.22); }
+
+    .char-count { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
+    /* ── Loading / Error ── */
+    .loading {
+      display: none; align-items: center; gap: .55rem;
+      color: var(--text-sec); font-size: 13px;
+    }
+    .loading.on { display: flex; }
+
+    .spinner {
+      width: 13px; height: 13px;
+      border: 2px solid var(--border2); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      display: none;
+      background: var(--red-dim); border: 1px solid rgba(255,107,122,.25);
+      border-radius: var(--radius); padding: .5rem .85rem;
+      font-size: 12px; color: var(--red);
+    }
+    .error-box.on { display: block; }
+
+    /* ── Opt toggles ── */
+    .opt-row { display: flex; gap: .4rem; }
+    .opt-btn {
+      font-size: 11px; color: var(--text-muted);
+      background: transparent; border: 1px solid var(--border2);
+      border-radius: 20px; padding: 3px 10px; cursor: pointer;
+      transition: all .15s;
+    }
+    .opt-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .opt-btn.active { background: var(--accent-dim); border-color: var(--accent-glow); color: var(--accent); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: center;
+      gap: .5rem; font-size: 12px; color: var(--text-muted);
+    }
+    .dot { color: var(--border2); }
+
+    @media (max-width: 600px) {
+      main { padding: 1.5rem 1rem 3rem; }
+      header { padding: 0 1rem; }
+      .hero h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-row">
+    <div class="logo-box">橋</div>
+    <div class="logo-text">
+      <strong>Kanji Bridge</strong>
+      <span>漢字ブリッジ</span>
     </div>
-    <div class="toast" id="toast"></div>
+  </div>
+  <span class="badge">🦝 Akihiro Labs</span>
+</header>
 
-    <nav>
-      <div class="nav-left">
-        <a class="nav-brand" href="#"><span class="logo-jp">漢字ブリッジ</span><span class="logo-en">Kanji Bridge · Akihiro Labs</span></a>
+<main>
+  <div class="hero">
+    <h1>Paste Japanese. <em>Get furigana.</em></h1>
+    <p>Paste or type text — furigana appears right inside the same box.</p>
+  </div>
+
+  <!-- The single editor box -->
+  <div class="editor-wrap">
+
+    <!-- Input textarea (editing mode) -->
+    <textarea id="inputArea" placeholder="日本語のテキストをここに貼り付けてください…" oninput="updateCount()"></textarea>
+
+    <!-- Result display (result mode) -->
+    <div id="resultArea"></div>
+
+    <!-- Bottom bar: input mode -->
+    <div class="box-footer" id="footerInput">
+      <div class="examples">
+        <span class="ex-label">Try:</span>
+        <span class="chip" onclick="setExample('東京は日本の首都です。')">東京は日本の首都</span>
+        <span class="chip" onclick="setExample('私は毎日図書館で勉強しています。')">毎日図書館で</span>
+        <span class="chip" onclick="setExample('日本語の勉強は難しいですが、漢字を覚えると読みやすくなります。')">難しいですが…</span>
+        <span class="chip" onclick="setExample('彼女は美しい花を大切にしながら、毎朝水をやっていた。')">彼女は美しい花を…</span>
       </div>
-      <div class="nav-right">
-        <span class="free-badge">✓ 100% Free</span>
-        <button class="dark-toggle" onclick="toggleDark()" id="dark-btn">🌙 Dark</button>
-      </div>
-    </nav>
-
-    <section class="hero">
-      <div class="hero-badge">✓ Works on any Japanese text</div>
-      <h1>Add furigana<br /><span>to any Japanese text</span></h1>
-      <p>Paste any Japanese text and get hiragana readings shown above each kanji — instantly, in your browser.</p>
-      <a href="#tool" class="btn-primary">振 Add Furigana</a>
-    </section>
-
-    <div class="features">
-      <div class="feature"><div class="f-icon">振</div><div class="f-title">Furigana</div><div class="f-sub">Readings above every kanji</div></div>
-      <div class="feature"><div class="f-icon">📋</div><div class="f-title">History</div><div class="f-sub">Last 10 saved locally</div></div>
-      <div class="feature"><div class="f-icon">📄</div><div class="f-title">PDF Export</div><div class="f-sub">Download with furigana</div></div>
-      <div class="feature"><div class="f-icon">🎌</div><div class="f-title">JLPT Levels</div><div class="f-sub">Color-coded N5–N1</div></div>
-      <div class="feature"><div class="f-icon">🔗</div><div class="f-title">Share</div><div class="f-sub">Share any text via link</div></div>
-      <div class="feature"><div class="f-icon">🆓</div><div class="f-title">Free</div><div class="f-sub">Always free to use</div></div>
-    </div>
-
-    <div id="tool">
-      <div class="section">
-        <div class="tool-card">
-          <div class="tool-card-header">
-            <div class="t-icon">振</div>
-            <div><div class="t-title">ふりがな生成</div><div class="t-sub">Furigana Generator · powered by Kuromoji</div></div>
-          </div>
-          <div class="tool-card-body">
-            <div id="ready-banner">
-              <div class="byte-wrap">
-                <div class="byte-avatar">🦝</div>
-                <div class="byte-bubble">辞書の準備完了！<br><span style="font-size:11px;font-weight:400;">Dictionary ready — paste any Japanese text and click Add Furigana!</span></div>
-              </div>
-            </div>
-            <div class="chips">
-              <span style="font-size:12px;color:var(--ink-soft);align-self:center;margin-right:4px;">Try →</span>
-              <button class="chip" onclick="setEx('サーバーの設定ファイルを変更する前に、必ずバックアップを取ること。')">サーバー設定</button>
-              <button class="chip" onclick="setEx('クラウド環境でのコンテナ技術は、現代のソフトウェア開発に欠かせない。')">クラウド技術</button>
-              <button class="chip" onclick="setEx('データベースの最適化により、クエリの実行速度が大幅に向上した。')">DB最適化</button>
-              <button class="chip" onclick="setEx('機械学習モデルの訓練には大量の計算資源が必要です。')">機械学習</button>
-              <button class="chip" onclick="setEx('大学生活は知識を深めるだけでなく、自分自身を成長させるための重要な時間である。')">大学生活</button>
-              <button class="chip" onclick="setEx('桜の花びらが風に舞い、川面に静かに落ちていった。')">桜・自然</button>
-              <button class="chip" onclick="setEx('東京の電車は時間通りに来ることで世界的に有名です。')">東京・日常</button>
-            </div>
-            <div class="textarea-toolbar">
-              <span class="textarea-toolbar-label">Input</span>
-              <button class="clear-textarea-btn" onclick="clearTextarea()">✕ Clear</button>
-            </div>
-            <div class="input-group">
-              <textarea id="furi-input" placeholder="日本語のテキストをここに入力してください…&#10;(Paste any Japanese text here)"></textarea>
-              <button class="run-btn" id="furi-btn" onclick="doFurigana()">振 Add Furigana</button>
-            </div>
-            <div class="loader-wrap" id="furi-loader"><div class="loader-bar"></div></div>
-            <p class="status-line" id="furi-status">Enter text above and click "Add Furigana".</p>
-
-            <div class="result-toolbar" id="result-toolbar">
-              <button class="tool-btn" id="btn-copy" onclick="copyResult()">📋 Copy</button>
-              <button class="tool-btn" id="btn-furi-toggle" onclick="toggleFurigana()">👁 Hide Furigana</button>
-              <button class="tool-btn" id="btn-romaji" onclick="toggleRomaji()">ローマ字 Romaji</button>
-              <button class="tool-btn" id="btn-jlpt" onclick="toggleJLPT()">🎌 JLPT Colors</button>
-              <button class="tool-btn" id="btn-breakdown" onclick="toggleBreakdown()">🔍 Word Info</button>
-              <button class="tool-btn" id="btn-share" onclick="shareResult()">🔗 Share</button>
-              <button class="tool-btn" id="dl-btn" onclick="downloadPDF()">📄 PDF</button>
-            </div>
-            <div class="furigana-result no-jlpt" id="furi-out">
-              <span class="furigana-placeholder">Your text with furigana readings will appear here…</span>
-            </div>
-            <div class="jlpt-legend" id="jlpt-legend">
-              <span class="jlpt-legend-label">JLPT</span>
-              <span class="jlpt-dot"><span class="jd-n5"></span>N5</span>
-              <span class="jlpt-dot"><span class="jd-n4"></span>N4</span>
-              <span class="jlpt-dot"><span class="jd-n3"></span>N3</span>
-              <span class="jlpt-dot"><span class="jd-n2"></span>N2</span>
-              <span class="jlpt-dot"><span class="jd-n1"></span>N1</span>
-              <span style="font-size:11px;color:var(--ink-ghost);margin-left:auto;">Colored underlines show kanji difficulty level</span>
-            </div>
-            <div class="breakdown-panel" id="breakdown-panel">
-              <div class="breakdown-title">🔍 Word Information — click any word above</div>
-              <div id="breakdown-detail" class="breakdown-empty">Click a word in the result to see its details.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="history-section">
-          <div class="history-header">
-            <div class="history-title">🕐 Recent paragraphs <span class="h-badge" id="history-count">0</span></div>
-            <button class="clear-btn" onclick="clearHistory()">Clear all</button>
-          </div>
-          <div class="history-list" id="history-list">
-            <div class="history-empty">Your last 10 processed paragraphs will appear here.</div>
-          </div>
-        </div>
-      </div>
+      <span class="char-count" id="charCount">0 characters</span>
+      <button class="btn-primary" id="genBtn" onclick="generate()">✦ Add furigana</button>
     </div>
 
-    <footer>
-      <div class="foot-byte">🦝</div>
-      <div class="foot-brand">漢字ブリッジ</div>
-      <div class="foot-labs">Developed by Akihiro Labs</div>
-      <p>© 2026 Akihiro Labs · Furigana by Kuromoji · 100% Free</p>
-      <p>Paste any Japanese text and get instant furigana readings. Internet needed once to load the dictionary.</p>
-      <p>⚠️ Kuromoji may occasionally mis-read ambiguous kanji — double-check if something looks wrong!</p>
-      <div class="foot-dev">DEVELOPED BY AKIHIRO LABS · 漢字ブリッジ v2.0</div>
-    </footer>
+    <!-- Bottom bar: result mode -->
+    <div class="box-footer" id="footerResult" style="display:none">
+      <div class="loading" id="loading"><div class="spinner"></div> Generating…</div>
+      <button class="btn-ghost" id="editBtn" onclick="backToEdit()">← Edit</button>
+      <button class="tool-btn" id="copyTextBtn" onclick="copyText()">⎘ Copy text</button>
+      <button class="tool-btn" id="copyHtmlBtn" onclick="copyHTML()">⎘ Copy HTML</button>
+      <button class="tool-btn dl" onclick="downloadHTML()">↓ Download</button>
+      <div class="opt-row" style="margin-left:auto">
+        <button class="opt-btn active" id="optFurigana" onclick="toggleFurigana()">Furigana</button>
+        <button class="opt-btn" id="optRomaji" onclick="toggleRomaji()">Rōmaji</button>
+      </div>
+    </div>
 
-    <script>
-      /* ── JLPT ── */
-      const JLPT = {
-        n5: new Set("日本語一二三四五六七八九十百千万円年月火水木金土曜時分秒今何人口手足目耳鼻顔気天雨雪山川田林森海空上下左右中大小外国男女子父母兄弟姉妹友先生学校本読書見聞話電車駅道店食飲来去入出立休買売作使始終考思言".split("").filter(Boolean)),
-        n4: new Set("会社員働仕事自分体頭心物事気持運動旅行乗降歩走泳着服洗暗明強弱早遅多少重軽長短近遠高安新古好嫌楽悲忙暇便利不安全危険病院薬医者問題答練習試験".split("").filter(Boolean)),
-        n3: new Set("政府経済社会文化技術産業環境教育情報科学研究発展機会可能必要重要特別普通一般現在最初最後以前以後生活習慣感情経験関係注意準備".split("").filter(Boolean)),
-        n2: new Set("議論批判評価影響判断基準原則条件状況対策措置傾向原因結果効果目的機能役割責任義務権利自由平和民主主義憲法法律規則制度政策".split("").filter(Boolean)),
-        n1: new Set("哲学概念抽象具体論理矛盾逆説仮説証明定義分析総合演繹帰納弁証法認識論存在論形而上学現象学解釈学構造主義脱構築".split("").filter(Boolean)),
-      };
-      function getJLPTLevel(c){if(JLPT.n5.has(c))return'n5';if(JLPT.n4.has(c))return'n4';if(JLPT.n3.has(c))return'n3';if(JLPT.n2.has(c))return'n2';if(JLPT.n1.has(c))return'n1';return null;}
+    <!-- Error bar -->
+    <div class="error-box" id="errorBox"></div>
+  </div>
 
-      /* ── ROMAJI ── */
-      const H2R={'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho','ま':'ma','み':'mi','む':'mu','め':'me','も':'mo','や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','を':'wo','ん':'n','が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go','ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo','だ':'da','で':'de','ど':'do','ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo','ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po','きゃ':'kya','きゅ':'kyu','きょ':'kyo','しゃ':'sha','しゅ':'shu','しょ':'sho','ちゃ':'cha','ちゅ':'chu','ちょ':'cho','にゃ':'nya','にゅ':'nyu','にょ':'nyo','ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo','みゃ':'mya','みゅ':'myu','みょ':'myo','りゃ':'rya','りゅ':'ryu','りょ':'ryo','ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo','じゃ':'ja','じゅ':'ju','じょ':'jo','びゃ':'bya','びゅ':'byu','びょ':'byo','ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo'};
-      function hiraToRomaji(s){let r='',i=0;while(i<s.length){const t=s.slice(i,i+2);if(H2R[t]){r+=H2R[t];i+=2;continue;}r+=H2R[s[i]]||s[i];i++;}return r;}
+</main>
 
-      /* ── STATE ── */
-      let workerReady = false;
-      let workerReadyResolve = null;
-      const workerReadyPromise = new Promise(r => workerReadyResolve = r);
-      let romajiMode = false, furiganaVisible = true, jlptMode = false, breakdownOpen = false;
-      let currentRawHTML = '';
+<footer>
+  <span>🦝</span>
+  <span>Developed by Akihiro Labs</span>
+  <span class="dot">·</span>
+  <span>Powered by Claude AI</span>
+</footer>
 
-      /* ── OVERLAY ── */
-      function setOverlayProgress(pct, msg) {
-        document.getElementById("overlay-bar").style.width = pct + "%";
-        document.getElementById("overlay-steps").textContent = msg;
-      }
-      function hideOverlay() {
-        const ov = document.getElementById("dict-overlay");
-        ov.classList.add("hidden");
-        setTimeout(() => ov.style.display = "none", 450);
-        document.getElementById("ready-banner").classList.add("show");
-      }
+<script>
+let currentTokens = [];
+let furiganaVisible = true;
+let romajiMode = false;
 
-      /* KUROMOJI — main thread with guaranteed paint before freeze */
-      let mainTok = null;
+const ROMAJI_MAP = {
+  'あ':'a','い':'i','う':'u','え':'e','お':'o',
+  'か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko',
+  'さ':'sa','し':'shi','す':'su','せ':'se','そ':'so',
+  'た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to',
+  'な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no',
+  'は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho',
+  'ま':'ma','み':'mi','む':'mu','め':'me','も':'mo',
+  'や':'ya','ゆ':'yu','よ':'yo',
+  'ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro',
+  'わ':'wa','を':'wo','ん':'n',
+  'が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go',
+  'ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo',
+  'だ':'da','ぢ':'ji','づ':'zu','で':'de','ど':'do',
+  'ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo',
+  'ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po',
+  'きゃ':'kya','きゅ':'kyu','きょ':'kyo',
+  'しゃ':'sha','しゅ':'shu','しょ':'sho',
+  'ちゃ':'cha','ちゅ':'chu','ちょ':'cho',
+  'にゃ':'nya','にゅ':'nyu','にょ':'nyo',
+  'ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo',
+  'みゃ':'mya','みゅ':'myu','みょ':'myo',
+  'りゃ':'rya','りゅ':'ryu','りょ':'ryo',
+  'ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo',
+  'じゃ':'ja','じゅ':'ju','じょ':'jo',
+  'びゃ':'bya','びゅ':'byu','びょ':'byo',
+  'ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo',
+};
 
-      function k2h(s) {
-        return s.replace(/[\u30A1-\u30F6]/g, function(ch) { return String.fromCharCode(ch.charCodeAt(0) - 0x60); });
-      }
+function toRomaji(kana) {
+  let r = '', i = 0;
+  while (i < kana.length) {
+    const two = kana.slice(i, i+2);
+    if (ROMAJI_MAP[two]) { r += ROMAJI_MAP[two]; i += 2; }
+    else if (ROMAJI_MAP[kana[i]]) { r += ROMAJI_MAP[kana[i]]; i++; }
+    else { r += kana[i]; i++; }
+  }
+  return r;
+}
 
-      function initKuromoji() {
-        var s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js';
-        s.onload = function() {
-          kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }).build(function(err, t) {
-            if (err) { setOverlayProgress(0, 'Failed.'); return; }
-            mainTok = t;
-            workerReady = true;
-            setOverlayProgress(100, '\u2713 Ready!');
-            setTimeout(hideOverlay, 400);
-            if (workerReadyResolve) workerReadyResolve();
-          });
-        };
-        document.head.appendChild(s);
-      }
+function updateCount() {
+  const t = document.getElementById('inputArea').value;
+  document.getElementById('charCount').textContent = t.length + ' character' + (t.length !== 1 ? 's' : '');
+}
 
-      function tokenizeAsync(text) {
-        return new Promise(function(resolve, reject) {
-          if (!mainTok) { reject(new Error('Not ready')); return; }
-          // Show status, yield TWO animation frames so browser paints, then run
-          requestAnimationFrame(function() {
-            requestAnimationFrame(function() {
-              try {
-                var tokens = mainTok.tokenize(text);
-                var html = '', count = 0;
-                tokens.forEach(function(tok) {
-                  var s = tok.surface_form, r = tok.reading, pos = tok.pos || '', base = tok.basic_form || s;
-                  var h = r ? k2h(r) : null;
-                  if (/[\u4E00-\u9FAF\u3400-\u4DBF]/.test(s) && h && h !== s) {
-                    html += '<ruby data-surface="' + encodeURIComponent(s) + '" data-reading="' + encodeURIComponent(h) + '" data-pos="' + encodeURIComponent(pos) + '" data-base="' + encodeURIComponent(base) + '">' + s + '<rt>' + h + '</rt></ruby>';
-                    count++; return;
-                  }
-                  var esc = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                  html += '<span data-surface="' + encodeURIComponent(s) + '" data-reading="' + encodeURIComponent(r||s) + '" data-pos="' + encodeURIComponent(pos) + '" data-base="' + encodeURIComponent(base) + '" class="word-token">' + esc + '</span>';
-                });
-                resolve({ html: html, count: count });
-              } catch(e) { reject(e); }
-            });
-          });
-        });
-      }
+function setExample(txt) {
+  document.getElementById('inputArea').value = txt;
+  updateCount();
+}
 
-            const progressSteps = [
-        [15, 400, "Connecting to dictionary server…"],
-        [30, 1200, "Downloading dictionary files…"],
-        [50, 2800, "Loading grammar data…"],
-        [70, 4500, "Loading vocabulary index…"],
-        [85, 6500, "Almost ready…"],
-      ];
+function showInputMode() {
+  document.getElementById('inputArea').style.display = 'block';
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('footerInput').style.display = 'flex';
+  document.getElementById('footerResult').style.display = 'none';
+  document.getElementById('errorBox').classList.remove('on');
+}
 
-      /* ── DARK MODE ── */
-      function toggleDark() {
-        document.body.classList.toggle('dark');
-        const isDark = document.body.classList.contains('dark');
-        document.getElementById('dark-btn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
-        localStorage.setItem('kb-dark', isDark ? '1' : '0');
-      }
+function showResultMode() {
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('resultArea').style.display = 'block';
+  document.getElementById('footerInput').style.display = 'none';
+  document.getElementById('footerResult').style.display = 'flex';
+}
 
-      /* ── JLPT COLORS ── */
-      function applyJLPTColors(htmlStr) {
-        const div = document.createElement('div');
-        div.innerHTML = htmlStr;
-        div.querySelectorAll('ruby').forEach(ruby => {
-          const surface = decodeURIComponent(ruby.getAttribute('data-surface') || '');
-          let level = null;
-          const priority = ['n5','n4','n3','n2','n1'];
-          for (const ch of surface) {
-            const l = getJLPTLevel(ch);
-            if (l) { const pi = priority.indexOf(l), ci = level ? priority.indexOf(level) : 99; if (pi < ci) level = l; }
-          }
-          if (level) ruby.classList.add('jlpt-' + level);
-        });
-        return div.innerHTML;
-      }
+function backToEdit() {
+  showInputMode();
+}
 
-      /* ── TOGGLES ── */
-      function toggleFurigana() {
-        furiganaVisible = !furiganaVisible;
-        document.getElementById('furi-out').classList.toggle('hide-rt', !furiganaVisible);
-        const btn = document.getElementById('btn-furi-toggle');
-        btn.textContent = furiganaVisible ? '👁 Hide Furigana' : '👁 Show Furigana';
-        btn.classList.toggle('active', !furiganaVisible);
+function renderOutput() {
+  let html = '';
+  for (const tok of currentTokens) {
+    if (tok.type === 'text') {
+      html += tok.value.replace(/\n/g, '<br>');
+    } else if (tok.type === 'ruby') {
+      const reading = romajiMode ? toRomaji(tok.reading) : tok.reading;
+      if (furiganaVisible) {
+        html += `<ruby>${tok.base}<rt>${reading}</rt></ruby>`;
+      } else {
+        html += tok.base;
       }
-      function toggleRomaji() {
-        romajiMode = !romajiMode;
-        const btn = document.getElementById('btn-romaji');
-        btn.classList.toggle('active', romajiMode);
-        btn.textContent = romajiMode ? 'ひらがな Hiragana' : 'ローマ字 Romaji';
-        refreshOutput();
-      }
-      function toggleJLPT() {
-        jlptMode = !jlptMode;
-        document.getElementById('furi-out').classList.toggle('no-jlpt', !jlptMode);
-        document.getElementById('jlpt-legend').classList.toggle('show', jlptMode);
-        document.getElementById('btn-jlpt').classList.toggle('active', jlptMode);
-      }
-      function toggleBreakdown() {
-        breakdownOpen = !breakdownOpen;
-        document.getElementById('breakdown-panel').classList.toggle('show', breakdownOpen);
-        document.getElementById('btn-breakdown').classList.toggle('active', breakdownOpen);
-      }
+    }
+  }
+  document.getElementById('resultArea').innerHTML = html;
+}
 
-      function refreshOutput() {
-        if (!currentRawHTML) return;
-        let html = jlptMode ? applyJLPTColors(currentRawHTML) : currentRawHTML;
-        if (romajiMode) {
-          const div = document.createElement('div');
-          div.innerHTML = html;
-          div.querySelectorAll('rt').forEach(rt => { rt.textContent = hiraToRomaji(rt.textContent); });
-          html = div.innerHTML;
-        }
-        const out = document.getElementById('furi-out');
-        out.innerHTML = html;
-        out.classList.toggle('hide-rt', !furiganaVisible);
-        out.classList.toggle('no-jlpt', !jlptMode);
-        bindWordClicks();
-      }
+function toggleFurigana() {
+  furiganaVisible = !furiganaVisible;
+  document.getElementById('optFurigana').classList.toggle('active', furiganaVisible);
+  renderOutput();
+}
 
-      function bindWordClicks() {
-        document.querySelectorAll('#furi-out ruby, #furi-out .word-token').forEach(el => {
-          el.classList.add('word-token');
-          el.style.cursor = 'pointer';
-          el.onclick = function() { showWordDetail(this); };
-        });
-      }
+function toggleRomaji() {
+  romajiMode = !romajiMode;
+  document.getElementById('optRomaji').classList.toggle('active', romajiMode);
+  renderOutput();
+}
 
-      function showWordDetail(el) {
-        if (!breakdownOpen) { breakdownOpen = true; document.getElementById('breakdown-panel').classList.add('show'); document.getElementById('btn-breakdown').classList.add('active'); }
-        document.querySelectorAll('#furi-out .word-token').forEach(e => e.classList.remove('selected'));
-        el.classList.add('selected');
-        const surface = decodeURIComponent(el.getAttribute('data-surface') || el.textContent);
-        const reading = decodeURIComponent(el.getAttribute('data-reading') || '');
-        const pos = decodeURIComponent(el.getAttribute('data-pos') || '—');
-        const base = decodeURIComponent(el.getAttribute('data-base') || surface);
-        const romaji = reading ? hiraToRomaji(reading) : '—';
-        let jlptLabel = '—';
-        for (const ch of surface) { const l = getJLPTLevel(ch); if (l) { jlptLabel = l.toUpperCase(); break; } }
-        document.getElementById('breakdown-detail').innerHTML = `
-          <div class="breakdown-detail">
-            <div class="bd-word">${surface}</div>
-            <div class="bd-row"><span class="bd-label">Reading</span> ${reading || '—'}</div>
-            <div class="bd-row"><span class="bd-label">Romaji</span> ${romaji}</div>
-            <div class="bd-row"><span class="bd-label">Base form</span> ${base !== surface ? base : '—'}</div>
-            <div class="bd-row"><span class="bd-label">Part of speech</span> ${pos}</div>
-            <div class="bd-row"><span class="bd-label">JLPT level</span> ${jlptLabel}</div>
-          </div>`;
-      }
+async function generate() {
+  const text = document.getElementById('inputArea').value.trim();
+  if (!text) return;
 
-      /* ── COPY ── */
-      function copyResult() {
-        let text = '';
-        document.getElementById('furi-out').querySelectorAll('ruby, span.word-token').forEach(el => {
-          if (el.tagName === 'RUBY') {
-            const rt = el.querySelector('rt');
-            text += rt ? `${el.childNodes[0].textContent}(${rt.textContent})` : el.childNodes[0].textContent;
-          } else if (!el.closest('ruby')) { text += el.textContent; }
-        });
-        if (!text) text = document.getElementById('furi-out').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-          const btn = document.getElementById('btn-copy');
-          btn.textContent = '✓ Copied!'; btn.classList.add('success');
-          setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('success'); }, 2000);
-        });
-      }
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('errorBox').classList.remove('on');
+  showResultMode();
+  document.getElementById('loading').classList.add('on');
 
-      /* ── SHARE ── */
-      function shareResult() {
-        const text = document.getElementById('furi-input').value.trim();
-        if (!text) return;
-        navigator.clipboard.writeText(location.origin + location.pathname + '#t=' + btoa(encodeURIComponent(text)))
-          .then(() => showToast('🔗 Share link copied!'));
-      }
-      function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.textContent = msg; t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2500);
-      }
-      function checkURLHash() {
-        if (location.hash.startsWith('#t=')) {
-          try {
-            document.getElementById('furi-input').value = decodeURIComponent(atob(location.hash.slice(3)));
-            workerReadyPromise.then(() => setTimeout(doFurigana, 200));
-            document.getElementById('tool').scrollIntoView({ behavior: 'smooth' });
-          } catch(e) {}
-        }
-      }
+  try {
+    const sys = `You are a Japanese linguistics expert. When given Japanese text, return ONLY a valid JSON array.
+Each element must be one of:
+- {"type":"text","value":"..."} for non-kanji segments (hiragana, katakana, punctuation, spaces, numbers, latin)
+- {"type":"ruby","base":"漢字","reading":"よみかた"} for kanji or kanji+kana words
 
-      /* ── MAIN FURIGANA ── */
-      async function doFurigana() {
-        const text = document.getElementById("furi-input").value.trim();
-        if (!text) return;
-        const btn = document.getElementById("furi-btn");
-        const status = document.getElementById("furi-status");
-        const loader = document.getElementById("furi-loader");
-        const toolbar = document.getElementById("result-toolbar");
+Rules:
+- Group kanji with their okurigana (e.g. 食べる → base:"食べる", reading:"たべる")
+- Include the full compound word as base when kanji appear together (e.g. 図書館 → base:"図書館", reading:"としょかん")
+- DO NOT add furigana to pure hiragana, katakana, punctuation, spaces, or numbers
+- Return ONLY the raw JSON array, nothing else — no explanation, no markdown, no backticks`;
 
-        btn.disabled = true;
-        toolbar.classList.remove("show");
-        loader.classList.add("show");
-        status.className = "status-line loading";
-        status.textContent = "Analysing text…";
-        try {
-          if (!workerReady) { status.textContent = "Still loading dictionary…"; await workerReadyPromise; }
-          const { html, count } = await tokenizeAsync(text);
-          currentRawHTML = html;
-          romajiMode = false;
-          document.getElementById('btn-romaji').classList.remove('active');
-          document.getElementById('btn-romaji').textContent = 'ローマ字 Romaji';
-          refreshOutput();
-          status.className = "status-line ok";
-          status.textContent = `✓ Done — ${count} reading${count !== 1 ? "s" : ""} added.`;
-          toolbar.classList.add("show");
-          addToHistory(text, html, count);
-          history.replaceState(null, '', '#t=' + btoa(encodeURIComponent(text)));
-        } catch(e) {
-          status.className = "status-line error";
-          status.textContent = "✗ Error: " + e.message;
-          document.getElementById('furi-out').innerHTML = '<span class="furigana-placeholder">Failed. Please check your internet connection.</span>';
-        }
-        loader.classList.remove("show");
-        btn.disabled = false;
-      }
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        system: sys,
+        messages: [{ role: 'user', content: text }]
+      })
+    });
 
-      function setEx(txt) { document.getElementById("furi-input").value = txt; document.getElementById("tool").scrollIntoView({ behavior: "smooth" }); }
-      function clearTextarea() {
-        document.getElementById('furi-input').value = '';
-        document.getElementById('furi-input').focus();
-        document.getElementById('furi-status').className = 'status-line';
-        document.getElementById('furi-status').textContent = 'Enter text above and click "Add Furigana".';
-      }
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
 
-      /* ── HISTORY ── */
-      const MAX_HISTORY = 10, HISTORY_KEY = 'kb-history';
-      let appHistory = [];
-      function loadHistory() { try { appHistory = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { appHistory = []; } renderHistory(); }
-      function saveHistory() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(appHistory)); } catch(e) {} }
-      function timeLabel() { return new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }); }
-      function addToHistory(text, html, count) {
-        if (appHistory.length > 0 && appHistory[0].text === text) return;
-        appHistory.unshift({ text, html, count, time: timeLabel() });
-        if (appHistory.length > MAX_HISTORY) appHistory = appHistory.slice(0, MAX_HISTORY);
-        saveHistory(); renderHistory();
-      }
-      function renderHistory() {
-        const list = document.getElementById("history-list");
-        document.getElementById("history-count").textContent = appHistory.length;
-        if (!appHistory.length) { list.innerHTML = '<div class="history-empty">Your last 10 processed paragraphs will appear here.</div>'; return; }
-        list.innerHTML = appHistory.map((item, i) => `
-          <div class="history-item" id="hitem-${i}">
-            <div class="history-item-header" onclick="toggleHistoryItem(${i})">
-              <div class="history-item-meta">
-                <span class="history-num">#${appHistory.length - i}</span>
-                <span class="history-preview">${item.text.slice(0, 60)}${item.text.length > 60 ? "…" : ""}</span>
-              </div>
-              <div class="history-actions">
-                <span class="history-time">${item.time}</span>
-                <button class="h-btn" onclick="event.stopPropagation();reloadItem(${i})">↩ Load</button>
-                <button class="h-btn dl" onclick="event.stopPropagation();downloadHistoryPDF(${i})">📄 PDF</button>
-              </div>
-            </div>
-            <div class="history-body" id="hbody-${i}">${item.html}
-              <div style="font-size:11px;color:var(--ink-ghost);margin-top:12px;">${item.count} reading${item.count!==1?"s":""} added · ${item.time}</div>
-            </div>
-          </div>`).join("");
-      }
-      function toggleHistoryItem(i) { document.getElementById(`hbody-${i}`).classList.toggle("open"); }
-      function reloadItem(i) {
-        document.getElementById("furi-input").value = appHistory[i].text;
-        currentRawHTML = appHistory[i].html; refreshOutput();
-        document.getElementById("furi-status").className = "status-line ok";
-        document.getElementById("furi-status").textContent = `✓ ${appHistory[i].count} reading${appHistory[i].count!==1?"s":""} added.`;
-        document.getElementById("result-toolbar").classList.add("show");
-        document.getElementById("tool").scrollIntoView({ behavior: "smooth" });
-      }
-      function clearHistory() { appHistory = []; saveHistory(); renderHistory(); }
+    const raw = data.content.map(i => i.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    currentTokens = JSON.parse(clean);
+    renderOutput();
 
-      /* ── PDF ── */
-      function printToPDF(html, label) {
-        const date = new Date().toLocaleDateString("ja-JP");
-        const win = window.open('', '_blank');
-        if (!win) { showToast('⚠️ Allow popups to download PDF'); return; }
-        win.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
-<title>漢字ブリッジ — ${label}</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Noto Sans JP',sans-serif;color:#0f0e17;background:#fff}.hd{background:#e8e5fb;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:2.5px solid #4a3fc0}.hd .brand{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:700;color:#4a3fc0}.hd .sub{font-size:11px;color:#7b7896;margin-top:3px}.hd .labs{font-size:10px;color:#9d92e8;letter-spacing:.07em;text-transform:uppercase;margin-top:2px}.hd .dt{font-size:12px;color:#7b7896;text-align:right}.bd{padding:32px 40px 80px;font-size:20px;line-height:4}ruby{ruby-align:center}rt{font-size:10px;color:#4a3fc0;font-weight:500}.ft{position:fixed;bottom:0;left:0;right:0;padding:8px 32px;border-top:1px solid #e8e5fb;font-size:10px;color:#b8b5cc;text-align:center;letter-spacing:.06em;text-transform:uppercase;background:#fff}@media print{@page{margin:0;size:A4}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>
-</head><body>
-<div class="hd"><div><div class="brand">漢字ブリッジ — Furigana Tool</div><div class="sub">${label}</div><div class="labs">Developed by Akihiro Labs</div></div><div class="dt">${date}</div></div>
-<div class="bd">${html}</div>
-<div class="ft">© Akihiro Labs · 漢字ブリッジ v2.0 · 100% Free</div>
-<script>window.onload=function(){setTimeout(function(){window.print();},600);}<\/script>
-</body></html>`);
-        win.document.close();
-      }
-      function downloadPDF() { printToPDF(document.getElementById('furi-out').innerHTML, 'ふりがな生成'); }
-      function downloadHistoryPDF(i) { const item=appHistory[i]; printToPDF(item.html, `${item.time} · ${item.count} readings`); }
+  } catch (err) {
+    showInputMode();
+    const box = document.getElementById('errorBox');
+    box.textContent = err.message || 'Something went wrong. Please try again.';
+    box.classList.add('on');
+  } finally {
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('genBtn').disabled = false;
+  }
+}
 
-      /* ── INIT ── */
-      window.addEventListener("DOMContentLoaded", () => {
-        if (localStorage.getItem('kb-dark') === '1') {
-          document.body.classList.add('dark');
-          document.getElementById('dark-btn').textContent = '☀️ Light';
-        }
-        loadHistory();
-        setOverlayProgress(5, "Starting…");
-        progressSteps.forEach(([pct, delay, msg]) => {
-          setTimeout(() => { if (!workerReady) setOverlayProgress(pct, msg); }, delay);
-        });
-        initKuromoji();
-        checkURLHash();
-      });
-    </script>
-  </body>
+async function copyText() {
+  let text = '';
+  for (const tok of currentTokens) {
+    text += tok.type === 'text' ? tok.value : `${tok.base}(${tok.reading})`;
+  }
+  try { await navigator.clipboard.writeText(text); flash('copyTextBtn', '✓ Copied!'); } catch(e) {}
+}
+
+async function copyHTML() {
+  const html = document.getElementById('resultArea').innerHTML;
+  try { await navigator.clipboard.writeText(html); flash('copyHtmlBtn', '✓ Copied!'); } catch(e) {}
+}
+
+function flash(id, msg) {
+  const btn = document.getElementById(id);
+  const orig = btn.textContent;
+  btn.textContent = msg;
+  btn.classList.add('success');
+  setTimeout(() => { btn.textContent = orig; btn.classList.remove('success'); }, 1800);
+}
+
+function downloadHTML() {
+  const inner = document.getElementById('resultArea').innerHTML;
+  const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Kanji Bridge — Result</title>
+<style>
+  body { font-family:'Hiragino Sans','Yu Gothic','Meiryo',sans-serif; background:#0f0f13; color:#e8e8f0; padding:3rem 2rem; max-width:800px; margin:0 auto; line-height:3.6; font-size:20px; }
+  ruby { display:inline-flex; flex-direction:column-reverse; align-items:center; vertical-align:bottom; }
+  rt { font-size:10px; color:#6c8fff; line-height:1.4; text-align:center; }
+  footer { margin-top:3rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem; font-size:12px; color:#5a5a72; text-align:center; }
+</style>
+</head>
+<body>
+${inner}
+<footer>🦝 Generated by Kanji Bridge — Akihiro Labs</footer>
+</body>
+</html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'kanji-bridge-result.html'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+});
+</script>
+</body>
 </html>
